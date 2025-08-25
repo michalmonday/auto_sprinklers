@@ -21,6 +21,9 @@
 
 DHT dht(D4, DHT11);
 
+SensorData weighted_moving_averages = {0};
+float alpha = 0.05; // smoothing factor for weighted moving average
+
 void set_mux_address(int addr) {
     digitalWrite(MUX_ADDR0, (addr & 0x01) ? HIGH : LOW);
     digitalWrite(MUX_ADDR1, (addr & 0x02) ? HIGH : LOW);
@@ -61,4 +64,17 @@ SensorData read_sensors() {
     }
 
     return data;
+}
+
+void update_sensors_weighted_moving_averages() {
+    SensorData current = read_sensors();
+    weighted_moving_averages.temperature = alpha * current.temperature + (1 - alpha) * weighted_moving_averages.temperature;
+    weighted_moving_averages.soil_moisture = alpha * current.soil_moisture + (1 - alpha) * weighted_moving_averages.soil_moisture;
+    weighted_moving_averages.light_level = alpha * current.light_level + (1 - alpha) * weighted_moving_averages.light_level;
+    weighted_moving_averages.rain_detected = current.rain_detected; // boolean, no averaging
+    weighted_moving_averages.humidity = alpha * current.humidity + (1 - alpha) * weighted_moving_averages.humidity;
+}
+
+SensorData get_sensors_weighted_moving_averages() {
+    return weighted_moving_averages;
 }
